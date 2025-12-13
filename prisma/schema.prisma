@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Monitor {
+  id          String       @id @default(uuid())
+  url         String
+  interval    Int          @default(5) // in minutes
+  isActive    Boolean      @default(true)
+  lastPing    DateTime?
+  status      String?
+  method      String       @default("GET")
+  headers     Json?
+  body        String?
+  maintenance Boolean      @default(false)
+  emailAlerts String? // Comma separated emails
+  logs        MonitorLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MonitorLog {
+  id        String   @id @default(uuid())
+  monitorId String
+  status    String? // "UP" | "DOWN" | "ERROR"
+  latency   Int // in ms
+  monitor   Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
