@@ -41,6 +41,8 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
         }
     };
 
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+
     const deleteMonitor = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (!confirm('Are you sure you want to delete this monitor?')) return;
@@ -51,14 +53,16 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
     };
 
     const toggleMaintenance = async (id: string, currentStatus: boolean) => {
+        setTogglingId(id);
         try {
             await fetch(`/api/monitors/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ maintenance: !currentStatus }),
             });
-            fetchMonitors();
+            await fetchMonitors();
         } catch (err) { console.error(err) }
+        setTogglingId(null);
     };
 
     const triggerPing = async () => {
@@ -294,8 +298,11 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
                                                                 e.stopPropagation();
                                                                 toggleMaintenance(monitor.id, monitor.maintenance);
                                                             }}
-                                                            className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 py-2 rounded-lg text-sm border border-yellow-500/20 transition-colors flex items-center justify-center gap-2">
-                                                            {monitor.maintenance ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                                                            disabled={togglingId === monitor.id}
+                                                            className={`flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 py-2 rounded-lg text-sm border border-yellow-500/20 transition-colors flex items-center justify-center gap-2 ${togglingId === monitor.id ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                                            {togglingId === monitor.id ? (
+                                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                                            ) : monitor.maintenance ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                                                             {monitor.maintenance ? 'Resume Monitoring' : 'Maintenance Mode'}
                                                         </button>
                                                     </div>
