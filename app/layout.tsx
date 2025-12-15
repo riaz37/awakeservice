@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// Import to trigger monitoring initialization
+import "@/app/api/start-monitoring/route";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
