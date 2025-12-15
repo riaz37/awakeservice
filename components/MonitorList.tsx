@@ -10,12 +10,14 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     const fetchMonitors = async () => {
         try {
             const res = await fetch('/api/monitors');
             const data = await res.json();
             setMonitors(data);
+            setLastUpdated(new Date());
         } catch (error) {
             console.error('Failed to fetch monitors', error);
         } finally {
@@ -56,6 +58,13 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
 
     useEffect(() => {
         fetchMonitors();
+
+        // Auto-refresh every 30 seconds to show new logs
+        const interval = setInterval(() => {
+            fetchMonitors();
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
     }, [refreshTrigger]);
 
     if (loading && monitors.length === 0) {
@@ -73,6 +82,13 @@ export default function MonitorList({ refreshTrigger }: { refreshTrigger: number
                 <div className="flex items-center gap-3">
                     <h2 className="text-2xl font-bold text-white">Monitors</h2>
                     <span className="px-2 py-0.5 rounded-full bg-white/10 text-xs text-gray-400">{monitors.length} Active</span>
+                    {lastUpdated && (
+                        <span className="text-xs text-gray-500">
+                            Updated {new Date().getTime() - lastUpdated.getTime() < 60000
+                                ? 'just now'
+                                : `${Math.floor((new Date().getTime() - lastUpdated.getTime()) / 60000)}m ago`}
+                        </span>
+                    )}
                 </div>
                 <button
                     onClick={triggerPing}
